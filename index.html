@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <!--
   ================================================================
-  SBK Total Dashboard Hub — v1
+  SBK Total Dashboard Hub — v2
   รวมแดชบอร์ดวิเคราะห์ยอดลูกค้า/ยานพาหนะ ศูนย์การค้าซีคอนบางแค ไว้ในแอปเดียว
+  v2: - ไอคอนแอปตัดมุมโปร่งใส (PC/favicon) + ไอคอนเต็มกรอบสำหรับ iOS/Android ที่ระบบตัดมุมเอง
+      - หน้าหลักแสดงการ์ดครบทุกแอปในหน้าจอเดียว ไม่ต้องเลื่อน (ปรับขนาดการ์ดตามจอ)
+      - แก้เลขลำดับการ์ดที่ซ้อนกับปุ่มรายการโปรด
   - หน้าโลโก้ + วัน/เดือน/ปี (พ.ศ.) : เวลา  → เข้าแอปอัตโนมัติภายใน 3 วินาที
   - โหมดมืด/สว่าง + พื้นหลังอนิเมชัน (ปิดเองเมื่อเครื่องตั้งค่าลดการเคลื่อนไหว)
   - ไอคอนแอปสำหรับ "เพิ่มลงหน้าจอหลัก" (iOS / Android / Desktop) สร้างจากโลโก้ในไฟล์นี้
@@ -114,39 +117,88 @@
   .splash-hint{ position:relative; z-index:2; margin-top:12px; font-size:12px; opacity:.6; animation:rise .8s 1s both; }
 
   /* ================= Main shell ================= */
-  #app{ position:relative; z-index:1; min-height:100%; opacity:0; transform:translateY(12px); transition:opacity .6s ease, transform .6s ease; }
+  /* แอปสูงเท่าหน้าจอพอดี (100dvh รองรับแถบเบราว์เซอร์มือถือ) เพื่อให้การ์ดทุกใบอยู่ในหน้าเดียว */
+  #app{ position:relative; z-index:1; height:100vh; height:100dvh; display:flex; flex-direction:column;
+    opacity:0; transform:translateY(12px); transition:opacity .6s ease, transform .6s ease; }
   #app.show{ opacity:1; transform:none; }
+  main.fit{ flex:1; min-height:0; width:100%; max-width:1600px; margin:0 auto; display:flex; flex-direction:column;
+    gap:clamp(8px,1.6vh,16px);
+    padding:clamp(10px,1.8vh,20px) clamp(12px,2vw,28px) calc(clamp(10px,1.6vh,18px) + env(safe-area-inset-bottom)); }
+  .grid-wrap{ flex:1; min-height:0; position:relative; }
+  /* จำนวนคอลัมน์กำหนดด้วย --cols; จำนวนแถว (--rows) คำนวณจาก JS จากจำนวนแอปทั้งหมด
+     ใช้จำนวนแอปทั้งหมด (ไม่ใช่ที่กรองแล้ว) เพื่อให้ขนาดการ์ดคงที่เวลาค้นหา/กรอง */
+  #grid{ --cols:3; height:100%; display:grid; gap:clamp(8px,1.3vw,18px);
+    grid-template-columns:repeat(var(--cols),minmax(0,1fr));
+    grid-template-rows:repeat(var(--rows,2),minmax(0,1fr)); }
+  @media (max-width:1023px){ #grid{ --cols:2; } }
+  #empty{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+  #empty.hidden{ display:none; }
+  .stat-row{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:clamp(6px,1vw,14px); }
+  .hero-sub{ display:none; }
+  @media (min-width:640px) and (min-height:640px){ .hero-sub{ display:block; } }
+  /* จอเตี้ยมาก (มือถือแนวนอน) ไม่พอให้การ์ดอ่านได้ → กลับไปใช้การเลื่อนหน้าแทน */
+  @media (max-height:520px){
+    #app{ height:auto; min-height:100dvh; }
+    .grid-wrap{ flex:none; }
+    #grid{ height:auto; grid-template-rows:none; grid-auto-rows:150px; }
+  }
   .glass{ background:var(--surface); border:1px solid var(--border); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); box-shadow:var(--shadow); }
   .muted{ color:var(--muted); }
-  header.top{ position:sticky; top:0; z-index:20; padding-top:env(safe-area-inset-top); }
+  header.top{ position:relative; z-index:20; padding-top:env(safe-area-inset-top); flex:none; }
   .icon-btn{ width:42px; height:42px; display:grid; place-items:center; border-radius:14px; transition:transform .2s, background .2s; }
   .icon-btn:hover{ transform:translateY(-2px); }
   .icon-btn:active{ transform:scale(.94); }
   .theme-toggle .sun{ display:none; } :root[data-theme="dark"] .theme-toggle .sun{ display:block; }
   :root[data-theme="dark"] .theme-toggle .moon{ display:none; }
 
-  .stat-chip{ border-radius:18px; padding:14px 16px; color:#fff; position:relative; overflow:hidden; }
+  .stat-chip{ border-radius:clamp(12px,1.4vw,18px); padding:clamp(8px,1.4vh,14px) clamp(10px,1.2vw,16px); color:#fff; position:relative; overflow:hidden; min-width:0; }
+  .stat-chip .lbl{ font-size:clamp(10px,.8vw,12px); opacity:.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .stat-chip .val{ font-size:clamp(18px,2.2vw,30px); font-weight:800; line-height:1.25; }
+  .stat-chip .unit{ font-size:clamp(9px,.7vw,11px); opacity:.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  @media (max-width:639px){ .stat-chip .unit{ display:none; } }
   .stat-chip::after{ content:""; position:absolute; right:-20px; top:-20px; width:90px; height:90px; border-radius:50%; background:rgba(255,255,255,.15); }
 
   /* การ์ดแอป */
-  .app-card{ position:relative; border-radius:24px; padding:20px; cursor:pointer; overflow:hidden; isolation:isolate;
+  /* container-type:size ทำให้เนื้อหาการ์ดย่อ/ซ่อนตาม "ขนาดการ์ดจริง" ไม่ใช่ขนาดจอ
+     จึงแสดงครบในหน้าเดียวได้ทั้งจอใหญ่ โน้ตบุ๊ก แท็บเล็ต และมือถือ */
+  .app-card{ position:relative; border-radius:clamp(16px,1.6vw,24px); padding:clamp(12px,1.4vw,22px); cursor:pointer; overflow:hidden; isolation:isolate;
+    container-type:size; min-height:0; display:flex; flex-direction:column;
     transition:transform .35s cubic-bezier(.2,.9,.3,1.2), box-shadow .35s; animation:cardIn .6s both; outline:none; }
+  .card-head{ display:flex; align-items:center; gap:clamp(10px,1vw,14px); padding-right:38px; min-width:0; }
+  .app-title{ margin:0; font-weight:700; font-size:clamp(14px,1.2vw,19px); line-height:1.4;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .app-en{ font-size:clamp(11px,.8vw,12.5px); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .app-desc{ margin:clamp(6px,1vh,12px) 0 0; font-size:clamp(12px,.95vw,14px); color:var(--muted); line-height:1.6;
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .card-foot{ margin-top:auto; padding-top:8px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .open-count{ font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .lbl-short{ display:none; }
+  @container (max-height:220px){ .app-desc{ -webkit-line-clamp:2; } }
+  @container (max-height:175px){ .app-desc{ display:none; } }
+  @container (max-height:135px) or (max-width:260px){
+    .app-en,.open-count{ display:none; }
+    .app-icon{ width:38px !important; height:38px !important; border-radius:12px !important; }
+    .app-icon svg{ width:20px; height:20px; }
+    .card-foot{ justify-content:flex-end; padding-top:4px; }
+    .open-pill{ padding:5px 12px !important; font-size:12px !important; }
+  }
+  @container (max-width:260px){ .lbl-long{ display:none; } .lbl-short{ display:inline; } .app-title{ font-size:13.5px; } .card-head{ gap:8px; padding-right:30px; } }
   .app-card:hover,.app-card:focus-visible{ transform:translateY(-6px) scale(1.015); }
   .app-card:focus-visible{ box-shadow:0 0 0 3px #818cf8, var(--shadow); }
   .app-card:active{ transform:scale(.98); }
   .app-card .halo{ position:absolute; inset:-1px; z-index:-1; opacity:0; transition:opacity .35s; border-radius:24px; }
   .app-card:hover .halo{ opacity:.14; }
-  .app-icon{ width:58px; height:58px; border-radius:18px; display:grid; place-items:center; color:#fff; box-shadow:0 10px 20px -8px rgba(0,0,0,.35); transition:transform .4s; }
+  .app-icon{ width:clamp(44px,3.6vw,58px); height:clamp(44px,3.6vw,58px); flex:none; border-radius:clamp(13px,1.2vw,18px); display:grid; place-items:center; color:#fff; box-shadow:0 10px 20px -8px rgba(0,0,0,.35); transition:transform .4s; }
   .app-card:hover .app-icon{ transform:rotate(-8deg) scale(1.08); }
-  .app-num{ position:absolute; top:14px; right:18px; font-weight:800; font-size:44px; line-height:1; opacity:.08; }
-  .open-pill{ display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:99px; font-size:13px; font-weight:600; color:#fff; transition:gap .25s; }
+  .open-pill{ display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:99px; font-size:13px; font-weight:600; color:#fff; transition:gap .25s; white-space:nowrap; flex:none; }
   .app-card:hover .open-pill{ gap:10px; }
-  .fav-btn{ position:absolute; top:12px; right:12px; width:34px; height:34px; border-radius:12px; display:grid; place-items:center; z-index:2; transition:transform .2s; }
+  .fav-btn{ position:absolute; top:10px; right:10px; width:32px; height:32px; border-radius:11px; display:grid; place-items:center; z-index:2; transition:transform .2s; }
   .fav-btn:hover{ transform:scale(1.12); }
   .fav-btn.on svg{ fill:#f59e0b; stroke:#f59e0b; }
   @keyframes cardIn{ from{ opacity:0; transform:translateY(24px) scale(.97); } to{ opacity:1; transform:none; } }
 
   .chip{ padding:7px 14px; border-radius:99px; font-size:13px; font-weight:500; border:1px solid var(--border); transition:all .25s; white-space:nowrap; }
+  @media (max-width:639px){ .chip{ padding:6px 11px; font-size:12px; } }
   .chip.active{ color:#fff; border-color:transparent; background:linear-gradient(90deg,#6366f1,#ec4899); }
 
   /* ================= Viewer (เปิดแดชบอร์ดเต็มจอภายในแอป) ================= */
@@ -234,70 +286,70 @@
       </div>
     </header>
 
-    <main class="px-3 sm:px-6 pb-16 max-w-7xl mx-auto">
-      <!-- Hero -->
-      <section class="mt-6 sm:mt-8 flex flex-col lg:flex-row lg:items-end gap-5">
-        <div class="flex-1">
-          <h1 class="text-2xl sm:text-4xl font-extrabold leading-tight">
+    <main class="fit">
+      <!-- Hero (กะทัดรัด เพื่อเหลือพื้นที่ให้การ์ด) -->
+      <section class="flex items-center gap-3 flex-none">
+        <div class="flex-1 min-w-0">
+          <h1 class="font-extrabold leading-tight truncate" style="font-size:clamp(17px,2.2vw,30px)">
             <span id="heroGreet">สวัสดี</span>
             <span class="bg-gradient-to-r from-indigo-500 via-fuchsia-500 to-amber-500 bg-clip-text text-transparent">เลือกแดชบอร์ดที่ต้องการ</span>
           </h1>
-          <p class="muted mt-1 text-sm sm:text-base">รวม <b id="appCount">0</b> แดชบอร์ดวิเคราะห์ยอดลูกค้าและยานพาหนะไว้ในที่เดียว แตะการ์ดเพื่อเปิดใช้งานได้ทันที</p>
+          <p class="hero-sub muted text-sm truncate">รวม <b id="appCount">0</b> แดชบอร์ดวิเคราะห์ยอดลูกค้าและยานพาหนะไว้ในที่เดียว แตะการ์ดเพื่อเปิดใช้งานได้ทันที</p>
         </div>
-        <button id="btnInstall" class="self-start lg:self-auto inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white font-semibold text-sm shadow-lg bg-gradient-to-r from-indigo-500 to-pink-500 hover:brightness-110 active:scale-95 transition">
+        <button id="btnInstall" class="shrink-0 inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-white font-semibold text-sm shadow-lg bg-gradient-to-r from-indigo-500 to-pink-500 hover:brightness-110 active:scale-95 transition" title="เพิ่มแอปลงหน้าจอ">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
-          เพิ่มแอปลงหน้าจอ
+          <span class="hidden sm:inline">เพิ่มแอปลงหน้าจอ</span>
         </button>
       </section>
 
-      <!-- สรุปภาพรวม -->
-      <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+      <!-- สรุปภาพรวม (4 ช่องแถวเดียวทุกขนาดจอ) -->
+      <section class="stat-row flex-none">
         <div class="stat-chip bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg">
-          <div class="text-xs opacity-90">แดชบอร์ดทั้งหมด</div>
-          <div class="text-3xl font-extrabold" id="statTotal">0</div>
-          <div class="text-[11px] opacity-80">ระบบ</div>
+          <div class="lbl">แดชบอร์ดทั้งหมด</div>
+          <div class="val" id="statTotal">0</div>
+          <div class="unit">ระบบ</div>
         </div>
         <div class="stat-chip bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg">
-          <div class="text-xs opacity-90">รายการโปรด</div>
-          <div class="text-3xl font-extrabold" id="statFav">0</div>
-          <div class="text-[11px] opacity-80">ระบบ</div>
+          <div class="lbl">รายการโปรด</div>
+          <div class="val" id="statFav">0</div>
+          <div class="unit">ระบบ</div>
         </div>
         <div class="stat-chip bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg">
-          <div class="text-xs opacity-90">เปิดใช้งานแล้ว (เครื่องนี้)</div>
-          <div class="text-3xl font-extrabold" id="statOpen">0</div>
-          <div class="text-[11px] opacity-80">ครั้ง</div>
+          <div class="lbl">เปิดใช้งาน (เครื่องนี้)</div>
+          <div class="val" id="statOpen">0</div>
+          <div class="unit">ครั้ง</div>
         </div>
         <div class="stat-chip bg-gradient-to-br from-pink-500 to-rose-600 shadow-lg">
-          <div class="text-xs opacity-90">ใช้ล่าสุด</div>
-          <div class="text-base font-bold truncate mt-1" id="statLast">—</div>
-          <div class="text-[11px] opacity-80 truncate" id="statLastTime">ยังไม่มีประวัติ</div>
+          <div class="lbl">ใช้ล่าสุด</div>
+          <div class="font-bold truncate" style="font-size:clamp(12px,1.1vw,16px);line-height:1.5;margin-top:2px" id="statLast">—</div>
+          <div class="unit" id="statLastTime">ยังไม่มีประวัติ</div>
         </div>
       </section>
 
-      <!-- ค้นหา + ตัวกรอง -->
-      <section class="mt-6 flex flex-col sm:flex-row gap-3 sm:items-center">
-        <label class="glass rounded-2xl flex items-center gap-2 px-4 py-2.5 flex-1">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="muted"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-          <input id="search" type="search" placeholder="ค้นหาแดชบอร์ด…" class="bg-transparent outline-none flex-1 text-sm" style="color:var(--text)">
+      <!-- ค้นหา + ตัวกรอง (แถวเดียว) -->
+      <section class="flex gap-2 sm:gap-3 items-center flex-none">
+        <label class="glass rounded-2xl flex items-center gap-2 px-3 sm:px-4 py-2 flex-1 min-w-0">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="muted shrink-0"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input id="search" type="search" placeholder="ค้นหาแดชบอร์ด…" class="bg-transparent outline-none flex-1 min-w-0 text-sm" style="color:var(--text)">
         </label>
-        <div class="flex gap-2 overflow-x-auto pb-1" id="filters">
+        <div class="flex gap-1.5 sm:gap-2 shrink-0" id="filters">
           <button class="chip active" data-filter="all">ทั้งหมด</button>
-          <button class="chip" data-filter="fav">★ รายการโปรด</button>
+          <button class="chip" data-filter="fav">★<span class="hidden sm:inline"> รายการโปรด</span></button>
           <button class="chip" data-filter="recent">ใช้บ่อย</button>
         </div>
       </section>
 
-      <!-- การ์ดแอป -->
-      <section id="grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 mt-5"></section>
-      <div id="empty" class="hidden glass rounded-3xl p-10 text-center mt-5">
-        <div class="text-4xl mb-2">🔍</div>
-        <div class="font-semibold">ไม่พบแดชบอร์ดที่ค้นหา</div>
-        <div class="muted text-sm">ลองพิมพ์คำอื่น หรือเลือกตัวกรอง "ทั้งหมด"</div>
-      </div>
-
-      <footer class="text-center text-xs muted mt-10">
-        SBK Dashboard Hub · v1 · ศูนย์การค้าซีคอนบางแค
-      </footer>
+      <!-- การ์ดแอป: เต็มพื้นที่ที่เหลือ แสดงครบทุกแอปในหน้าเดียว -->
+      <section class="grid-wrap">
+        <div id="grid"></div>
+        <div id="empty" class="hidden">
+          <div class="glass rounded-3xl px-8 py-6">
+            <div class="text-3xl mb-1">🔍</div>
+            <div class="font-semibold">ไม่พบแดชบอร์ดที่ค้นหา</div>
+            <div class="muted text-sm">ลองพิมพ์คำอื่น หรือเลือกตัวกรอง "ทั้งหมด"</div>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -399,14 +451,23 @@ const svgIcon = (key, size=26) =>
    2) โลโก้แอป (SVG ต้นฉบับ) — ใช้ทั้ง splash, header, favicon และไอคอนหน้าจอหลัก
    เหตุผล: ไม่ต้องพึ่งไฟล์รูปภายนอก ไฟล์เดียวใช้ได้ทุกที่
    ===================================================================== */
-const LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+/* สร้างโลโก้ได้ 2 แบบ เพราะแต่ละแพลตฟอร์มจัดการมุมไม่เหมือนกัน:
+   - rounded  : มุมโค้งและ "นอกมุมโปร่งใส" → ใช้บนหน้าเว็บ, favicon, แอปบน PC (Windows/Mac ไม่ตัดมุมให้)
+   - fullBleed: เต็มกรอบสี่เหลี่ยม ไม่มีมุมโค้ง → ใช้กับ iOS / Android ที่ตัดมุมตามรูปทรงของระบบเอง
+     (ถ้าใส่มุมโค้งไว้ก่อน iOS จะเติมพื้นดำ/ขาวตรงมุม และ Android จะเห็นขอบซ้อนสองชั้น)
+     เนื้อหาย่อเหลือ 80% ให้อยู่ใน safe zone ของไอคอนแบบ maskable */
+function makeLogoSVG(fullBleed){
+  const rx = fullBleed ? 0 : 116;
+  const fit = fullBleed ? ' transform="translate(256 256) scale(.8) translate(-256 -256)"' : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <defs>
  <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset=".55" stop-color="#a855f7"/><stop offset="1" stop-color="#ec4899"/></linearGradient>
  <linearGradient id="b" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#ffffff"/></linearGradient>
  <radialGradient id="s" cx=".3" cy=".2" r=".8"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
 </defs>
-<rect width="512" height="512" rx="116" fill="url(#g)"/>
-<rect width="512" height="512" rx="116" fill="url(#s)"/>
+<rect width="512" height="512" rx="${rx}" fill="url(#g)"/>
+<rect width="512" height="512" rx="${rx}" fill="url(#s)"/>
+<g${fit}>
 <circle cx="256" cy="256" r="168" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="10"/>
 <rect x="138" y="270" width="52" height="110" rx="14" fill="url(#b)"/>
 <rect x="230" y="200" width="52" height="180" rx="14" fill="url(#b)"/>
@@ -414,8 +475,12 @@ const LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <path d="M140 238 L250 168 L300 196 L380 118" fill="none" stroke="#fde68a" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="380" cy="118" r="20" fill="#fde68a"/>
 <text x="256" y="452" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="64" fill="#fff" letter-spacing="6">SBK</text>
+</g>
 </svg>`;
-const LOGO_URL = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(LOGO_SVG);
+}
+const svgDataUrl = svg => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+const LOGO_URL      = svgDataUrl(makeLogoSVG(false));  // มุมโปร่งใส
+const LOGO_FULL_URL = svgDataUrl(makeLogoSVG(true));   // เต็มกรอบ
 
 /* =====================================================================
    3) สถานะแอป + ที่เก็บข้อมูลในเครื่อง (ห่อ try/catch เพราะบางเบราว์เซอร์/โหมดส่วนตัวใช้ไม่ได้)
@@ -567,30 +632,33 @@ function applyMotion(){
    เหตุผล: iOS ต้องการ apple-touch-icon แบบ PNG และ Android ต้องการ manifest
    จึงแปลงโลโก้ SVG → PNG ด้วย canvas ตอนเปิดแอป แล้วใส่เป็น data URL
    ===================================================================== */
-function svgToPng(size){
+function svgToPng(src, size){
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
       try{
         const c = document.createElement('canvas'); c.width = c.height = size;
         const x = c.getContext('2d');
-        // iOS จะตัดมุมเองและเติมพื้นดำถ้าโปร่งใส จึงลงพื้นสีก่อน
-        x.fillStyle = '#6366f1'; x.fillRect(0,0,size,size);
+        // ไม่ลงพื้นสีก่อน: แบบมุมโค้งต้องคงความโปร่งใสที่มุมไว้ ส่วนแบบเต็มกรอบทึบอยู่แล้ว
+        x.clearRect(0,0,size,size);
         x.drawImage(img, 0, 0, size, size);
         resolve(c.toDataURL('image/png'));
       }catch(err){ reject(err); }
     };
     img.onerror = reject;
-    img.src = LOGO_URL;
+    img.src = src;
   });
 }
 async function initAppIcons(){
   ['splashLogo','headerLogo','modalLogo'].forEach(id => { document.getElementById(id).src = LOGO_URL; });
   document.getElementById('favSvg').href = LOGO_URL;
   try{
-    const [p180, p192, p512] = await Promise.all([svgToPng(180), svgToPng(192), svgToPng(512)]);
-    document.getElementById('appleIcon').href = p180;
-    document.getElementById('favPng').href = p192;
+    const [r192, r512, f180, f512] = await Promise.all([
+      svgToPng(LOGO_URL, 192), svgToPng(LOGO_URL, 512),          // มุมโปร่งใส → PC / favicon
+      svgToPng(LOGO_FULL_URL, 180), svgToPng(LOGO_FULL_URL, 512) // เต็มกรอบ → iOS / Android ตัดมุมเอง
+    ]);
+    document.getElementById('appleIcon').href = f180;
+    document.getElementById('favPng').href = r192;
     const startUrl = location.href.split('#')[0];
     const manifest = {
       name:'SBK Dashboard Hub', short_name:'SBK Hub',
@@ -599,9 +667,10 @@ async function initAppIcons(){
       display:'standalone', orientation:'any',
       background_color:'#1e1b4b', theme_color:'#4f46e5', lang:'th',
       icons:[
-        { src:p192, sizes:'192x192', type:'image/png', purpose:'any' },
-        { src:p512, sizes:'512x512', type:'image/png', purpose:'any' },
-        { src:p512, sizes:'512x512', type:'image/png', purpose:'maskable' }
+        // Chrome/Edge บน PC ใช้ 'any' (มุมโปร่งใส) — Android ใช้ 'maskable' (เต็มกรอบ) แล้วตัดเป็นรูปทรงของระบบ
+        { src:r192, sizes:'192x192', type:'image/png', purpose:'any' },
+        { src:r512, sizes:'512x512', type:'image/png', purpose:'any' },
+        { src:f512, sizes:'512x512', type:'image/png', purpose:'maskable' }
       ]
     };
     document.getElementById('manifestLink').href =
@@ -653,22 +722,26 @@ function render(){
     return `
     <article class="app-card glass" tabindex="0" data-id="${a.id}" style="animation-delay:${i*70}ms" aria-label="เปิด ${escapeHTML(a.th)}">
       <div class="halo" style="background:${g}"></div>
-      <span class="app-num">${String(APPS.indexOf(a)+1).padStart(2,'0')}</span>
       <button class="fav-btn glass ${fav?'on':''}" data-fav="${a.id}" title="${fav?'นำออกจากรายการโปรด':'เพิ่มในรายการโปรด'}" aria-label="รายการโปรด" aria-pressed="${fav}">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>
       </button>
-      <div class="app-icon" style="background:${g}">${svgIcon(a.icon)}</div>
-      <h3 class="mt-4 font-bold text-lg leading-snug">${escapeHTML(a.th)}</h3>
-      <div class="text-xs font-medium" style="color:${a.grad[0]}">${escapeHTML(a.name)}</div>
-      <p class="muted text-sm mt-2 min-h-[44px]">${escapeHTML(a.desc)}</p>
-      <div class="mt-4 flex items-center justify-between gap-2">
-        <span class="text-[11px] muted">${n ? `เปิดแล้ว ${n.toLocaleString('th-TH')} ครั้ง` : 'ยังไม่เคยเปิด'}</span>
-        <span class="open-pill" style="background:${g}">เปิดแดชบอร์ด
+      <div class="card-head">
+        <div class="app-icon" style="background:${g}">${svgIcon(a.icon)}</div>
+        <div class="min-w-0">
+          <h3 class="app-title">${escapeHTML(a.th)}</h3>
+          <div class="app-en" style="color:${a.grad[0]}">${escapeHTML(a.name)}</div>
+        </div>
+      </div>
+      <p class="app-desc">${escapeHTML(a.desc)}</p>
+      <div class="card-foot">
+        <span class="open-count">${n ? `เปิดแล้ว ${n.toLocaleString('th-TH')} ครั้ง` : 'ยังไม่เคยเปิด'}</span>
+        <span class="open-pill" style="background:${g}"><span class="lbl-long">เปิดแดชบอร์ด</span><span class="lbl-short">เปิด</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </span>
       </div>
     </article>`;
   }).join('');
+  layoutGrid();
 
   const empty = document.getElementById('empty');
   empty.classList.toggle('hidden', list.length > 0);
@@ -681,6 +754,16 @@ function render(){
       state.filter === 'recent' ? 'เปิดแดชบอร์ดอย่างน้อย 1 ครั้งเพื่อให้แสดงที่นี่' : 'ลองพิมพ์คำอื่น หรือเลือกตัวกรอง "ทั้งหมด"';
   }
   renderStats();
+}
+
+/* แบ่งความสูงพื้นที่การ์ดเป็นจำนวนแถวที่พอดีกับแอปทั้งหมด (เช่น 6 แอป: 3 คอลัมน์ = 2 แถว, 2 คอลัมน์ = 3 แถว)
+   อ่าน --cols จาก CSS เพื่อให้ media query เป็นแหล่งเดียวที่กำหนดจำนวนคอลัมน์ */
+function layoutGrid(){
+  const grid = document.getElementById('grid');
+  if (!grid) return;
+  const cols = parseInt(getComputedStyle(grid).getPropertyValue('--cols'), 10) || 3;
+  const rows = Math.max(1, Math.ceil(APPS.length / cols));
+  grid.style.setProperty('--rows', String(rows));
 }
 
 function renderStats(){
@@ -862,6 +945,8 @@ function handleEvents(){
   document.getElementById('vExternal').addEventListener('click', openExternal);
   document.getElementById('loaderExternal').addEventListener('click', openExternal);
 
+  window.addEventListener('resize', debounce(layoutGrid, 120));
+  window.addEventListener('orientationchange', () => setTimeout(layoutGrid, 200));
   window.addEventListener('popstate', () => closeViewer(true));
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
