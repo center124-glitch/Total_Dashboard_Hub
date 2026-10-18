@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <!--
   ================================================================
-  SBK Total Dashboard Hub — v3
+  SBK Total Dashboard Hub — v5
+  v5: - นำ Security Personality Report ออก → เหลือ 6 แอป (PC 3×2, มือถือ 2×3)
+  v4: - เพิ่ม Security Personality Report (ศูนย์รายงานผลตรวจบุคลิกภาพ) แทน Daily/Monthly Personality Report → รวม 7 แอป
+      - การ์ดโทนสีใหม่ 3 สี/แอป, ขอบเรืองแสงหมุน, เอียง 3D ตามเมาส์, สปอตไลต์, แสงกวาด, ระลอกคลื่นเมื่อแตะ, การ์ดสุดท้ายขยายเต็มแถว
+      - หน้าเข้าระบบใหม่: Warp-speed ดาว, วงโคจร 3 ชั้น, โลโก้หมุน 3D, คลื่นกระแทก, แสงวาบ, พื้นตาราง Neon, เปิดแอปแบบม่านวงกลม
   v3: - เนื้อหาอยู่ในกรอบกลางจอ (กว้างสูงสุด 1540px) เว้นขอบล่าง, การ์ด/การ์ดสรุปเล็กลง, พื้นการ์ดทึบขึ้น
   รวมแดชบอร์ดวิเคราะห์ยอดลูกค้า/ยานพาหนะ ศูนย์การค้าซีคอนบางแค ไว้ในแอปเดียว
   v2: - ไอคอนแอปตัดมุมโปร่งใส (PC/favicon) + ไอคอนเต็มกรอบสำหรับ iOS/Android ที่ระบบตัดมุมเอง
@@ -88,40 +92,89 @@
     mask-image:radial-gradient(ellipse at center,#000 30%,transparent 75%);
     -webkit-mask-image:radial-gradient(ellipse at center,#000 30%,transparent 75%); }
 
-  /* ================= Splash ================= */
+  /* ================= Splash v4 (หน้าเข้าระบบ) =================
+     ลำดับเวลา: 0–1.2s วาร์ปดาว + วงโคจรบินเข้า → 1.2s โลโก้ลงจอด + แสงวาบ + คลื่นกระแทก
+               → 1.3–2.3s ชื่อแอป/วันเวลา/แถบโหลด ปรากฏ → 3.8s เข้าแอปด้วยม่านวงกลม */
+  @property --ang{ syntax:'<angle>'; inherits:false; initial-value:0deg; }
+  @keyframes angSpin{ to{ --ang:360deg; } }
   #splash{ position:fixed; inset:0; z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    background:radial-gradient(circle at 30% 20%,#4338ca 0%,#1e1b4b 45%,#0b0b1e 100%); color:#fff; overflow:hidden; cursor:pointer;
-    transition:opacity .7s ease, transform .7s ease, filter .7s ease; padding:24px; text-align:center; }
-  #splash.leave{ opacity:0; transform:scale(1.08); filter:blur(8px); pointer-events:none; }
-  .splash-ring{ position:absolute; border-radius:50%; border:2px solid rgba(255,255,255,.12); animation:ring 3.2s ease-out infinite; }
-  @keyframes ring{ from{ width:120px; height:120px; opacity:.9; } to{ width:140vmax; height:140vmax; opacity:0; } }
-  .splash-aurora{ position:absolute; inset:-30%; background:conic-gradient(from 0deg,#6366f1,#22d3ee,#f472b6,#fbbf24,#a78bfa,#6366f1);
-    filter:blur(90px); opacity:.35; animation:spin 14s linear infinite; }
+    background:radial-gradient(ellipse at 50% 42%,#1e1b4b 0%,#0b0b1e 55%,#03030c 100%); color:#fff; overflow:hidden; cursor:pointer;
+    padding:24px; text-align:center; }
+  #splash.leave{ animation:splashOut .85s cubic-bezier(.7,0,.3,1) forwards; pointer-events:none; }
+  @keyframes splashOut{ to{ opacity:0; transform:scale(1.3); filter:blur(12px) brightness(1.6); } }
+  #warp{ position:absolute; inset:0; width:100%; height:100%; }
   @keyframes spin{ to{ transform:rotate(360deg); } }
-  .splash-logo{ width:132px; height:132px; position:relative; z-index:2; animation:pop .9s cubic-bezier(.2,1.4,.4,1) both, glow 2.4s ease-in-out .9s infinite; border-radius:32px; }
-  @keyframes pop{ from{ transform:scale(.3) rotate(-25deg); opacity:0; } to{ transform:scale(1) rotate(0); opacity:1; } }
-  @keyframes glow{ 0%,100%{ filter:drop-shadow(0 0 18px rgba(129,140,248,.6)); } 50%{ filter:drop-shadow(0 0 38px rgba(244,114,182,.85)); } }
-  .splash-title{ position:relative; z-index:2; margin-top:22px; font-weight:800; font-size:clamp(26px,6vw,44px); letter-spacing:.5px;
-    background:linear-gradient(90deg,#c7d2fe,#67e8f9,#f9a8d4,#fde68a,#c7d2fe); background-size:300% 100%;
-    -webkit-background-clip:text; background-clip:text; color:transparent; animation:shine 4s linear infinite, rise .8s .3s both; }
-  @keyframes shine{ to{ background-position:300% 0; } }
+  @keyframes fadeIn{ from{ opacity:0; } }
   @keyframes rise{ from{ opacity:0; transform:translateY(16px); } to{ opacity:1; transform:none; } }
-  .splash-sub{ position:relative; z-index:2; opacity:.8; font-size:clamp(13px,3.4vw,16px); animation:rise .8s .5s both; }
-  .splash-date{ position:relative; z-index:2; margin-top:26px; padding:14px 26px; border-radius:20px;
-    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-    animation:rise .8s .7s both; }
+  @keyframes shine{ to{ background-position:300% 0; } }
+  .sp-aurora{ position:absolute; inset:-30%; background:conic-gradient(from 0deg,#6366f1,#22d3ee,#f472b6,#fbbf24,#a78bfa,#6366f1);
+    filter:blur(100px); opacity:.28; animation:fadeIn 1.6s .6s both, spin 14s linear infinite; }
+  .sp-floor{ position:absolute; left:-50%; right:-50%; bottom:-6%; height:55%; transform-origin:50% 100%; transform:perspective(500px) rotateX(68deg);
+    background-image:linear-gradient(rgba(34,211,238,.55) 1.5px,transparent 1.5px),linear-gradient(90deg,rgba(168,85,247,.5) 1.5px,transparent 1.5px);
+    background-size:60px 60px; opacity:.5; animation:floorMove .8s linear infinite, fadeIn 1.2s .3s both;
+    -webkit-mask-image:linear-gradient(to top,#000 5%,transparent 85%); mask-image:linear-gradient(to top,#000 5%,transparent 85%); }
+  @keyframes floorMove{ to{ background-position:0 60px; } }
+  .sp-flash{ position:absolute; inset:0; z-index:4; pointer-events:none; opacity:0;
+    background:radial-gradient(circle at 50% 40%,#fff 0%,rgba(199,210,254,.6) 18%,rgba(255,255,255,0) 60%); animation:flash 1s 1.15s ease-out; }
+  @keyframes flash{ 0%{ opacity:0; } 12%{ opacity:.85; } 100%{ opacity:0; } }
+  .sp-stage{ position:relative; z-index:2; width:clamp(180px,30vmin,250px); aspect-ratio:1; display:grid; place-items:center; perspective:800px; flex:none; }
+  .sp-stage > *{ grid-area:1/1; }
+  .sp-beams{ width:300%; height:300%; border-radius:50%;
+    background:conic-gradient(from 0deg,transparent 0 10deg,rgba(165,180,252,.2) 15deg,transparent 22deg 70deg,rgba(244,114,182,.18) 76deg,transparent 84deg 140deg,rgba(103,232,249,.2) 146deg,transparent 154deg 220deg,rgba(253,230,138,.16) 226deg,transparent 234deg 290deg,rgba(165,180,252,.18) 296deg,transparent 304deg);
+    -webkit-mask-image:radial-gradient(circle,#000 15%,transparent 62%); mask-image:radial-gradient(circle,#000 15%,transparent 62%);
+    animation:fadeIn 1.2s 1.2s both, spin 18s linear infinite; }
+  .orbit-wrap{ width:100%; height:100%; display:grid; place-items:center; animation:orbitIn 1s cubic-bezier(.2,1.2,.3,1) both; }
+  .ow1{ transform:rotateX(70deg); animation-delay:.45s; }
+  .ow2{ transform:rotateX(70deg) rotateY(58deg); animation-delay:.6s; }
+  .ow3{ transform:rotateX(70deg) rotateY(-58deg); animation-delay:.75s; }
+  @keyframes orbitIn{ from{ opacity:0; scale:2.6; } to{ opacity:1; scale:1; } }
+  .orbit{ width:94%; height:94%; border-radius:50%; position:relative; border:1.5px solid rgba(103,232,249,.6); color:#67e8f9;
+    box-shadow:0 0 18px rgba(103,232,249,.35), inset 0 0 18px rgba(103,232,249,.2); animation:spin 4s linear infinite; }
+  .o2{ border-color:rgba(244,114,182,.6); color:#f472b6; box-shadow:0 0 18px rgba(244,114,182,.35), inset 0 0 18px rgba(244,114,182,.2); animation-duration:5.5s; animation-direction:reverse; }
+  .o3{ border-color:rgba(253,230,138,.6); color:#fde68a; box-shadow:0 0 18px rgba(253,230,138,.3), inset 0 0 18px rgba(253,230,138,.18); animation-duration:7s; }
+  .orbit::before{ content:""; position:absolute; top:-6px; left:50%; width:12px; height:12px; margin-left:-6px; border-radius:50%; background:#fff; box-shadow:0 0 14px 5px currentColor; }
+  .sp-halo{ width:85%; height:85%; border-radius:50%; background:radial-gradient(circle,rgba(129,140,248,.6),rgba(236,72,153,.25) 45%,transparent 70%);
+    animation:fadeIn 1s 1.1s both, haloPulse 2.4s ease-in-out 1.6s infinite; }
+  @keyframes haloPulse{ 50%{ transform:scale(1.18); opacity:.7; } }
+  .sp-shock{ width:40%; height:40%; border-radius:50%; border:3px solid rgba(255,255,255,.9); opacity:0; animation:shock 1.3s cubic-bezier(.1,.6,.3,1) 1.2s; }
+  .sp-shock.s2{ border-color:rgba(103,232,249,.9); animation-delay:1.42s; }
+  .sp-shock.s3{ border-color:rgba(244,114,182,.9); animation-delay:1.64s; }
+  @keyframes shock{ 0%{ opacity:1; transform:scale(.6); } 100%{ opacity:0; transform:scale(7); border-width:0; } }
+  .splash-logo{ width:54%; height:54%; position:relative; z-index:3; animation:logoIn 1.2s cubic-bezier(.2,1.25,.35,1) .25s both, logoGlow 2.4s ease-in-out 1.5s infinite; }
+  @keyframes logoIn{ 0%{ opacity:0; transform:translateZ(-600px) rotateY(-540deg) scale(.2); filter:blur(10px) brightness(3); }
+                     70%{ opacity:1; filter:blur(0) brightness(1.4); } 100%{ opacity:1; transform:none; filter:none; } }
+  @keyframes logoGlow{ 0%,100%{ filter:drop-shadow(0 0 22px rgba(129,140,248,.8)); } 50%{ filter:drop-shadow(0 0 48px rgba(244,114,182,.95)); } }
+  .splash-title{ position:relative; z-index:2; margin-top:clamp(8px,2.4vh,22px); font-weight:800; font-size:clamp(26px,6vw,46px); letter-spacing:.03em; line-height:1.35;
+    background:linear-gradient(90deg,#c7d2fe,#67e8f9,#f9a8d4,#fde68a,#c7d2fe); background-size:300% 100%;
+    -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(0 0 18px rgba(167,139,250,.55));
+    clip-path:inset(0 100% 0 0); animation:titleReveal 1s cubic-bezier(.7,0,.2,1) 1.3s forwards, shine 4s linear infinite; }
+  @keyframes titleReveal{ to{ clip-path:inset(-20% -5% -20% -5%); } }
+  .splash-sub{ position:relative; z-index:2; opacity:.85; font-size:clamp(13px,3.4vw,16px); animation:rise .8s 1.7s both; }
+  .splash-date{ position:relative; z-index:2; margin-top:clamp(12px,2.6vh,24px); padding:12px 28px; border-radius:20px;
+    background:rgba(255,255,255,.06); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); animation:rise .8s 1.9s both; }
+  .splash-date::before{ content:""; position:absolute; inset:0; border-radius:inherit; padding:1.5px;
+    background:conic-gradient(from var(--ang),#22d3ee,#a78bfa,#f472b6,#fde68a,#22d3ee);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude;
+    animation:angSpin 3s linear infinite; pointer-events:none; }
   .splash-date .d{ font-size:clamp(14px,3.6vw,18px); color:#e0e7ff; }
-  .splash-date .t{ font-size:clamp(34px,9vw,54px); font-weight:700; font-variant-numeric:tabular-nums; line-height:1.2;
-    background:linear-gradient(90deg,#a5f3fc,#f0abfc); -webkit-background-clip:text; background-clip:text; color:transparent; }
-  .splash-progress{ position:relative; z-index:2; width:min(260px,70vw); height:6px; border-radius:99px; background:rgba(255,255,255,.14); margin-top:28px; overflow:hidden; }
-  .splash-progress span{ display:block; height:100%; width:0; border-radius:99px; background:linear-gradient(90deg,#22d3ee,#a78bfa,#f472b6); }
-  .splash-hint{ position:relative; z-index:2; margin-top:12px; font-size:12px; opacity:.6; animation:rise .8s 1s both; }
+  .splash-date .t{ font-size:clamp(32px,9vw,54px); font-weight:700; font-variant-numeric:tabular-nums; line-height:1.25;
+    background:linear-gradient(90deg,#a5f3fc,#f0abfc,#fde68a); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .splash-progress{ position:relative; z-index:2; width:min(300px,72vw); height:6px; border-radius:99px; background:rgba(255,255,255,.12); margin-top:clamp(14px,2.8vh,26px); animation:rise .6s 2s both; }
+  .splash-progress span{ position:relative; display:block; height:100%; width:0; border-radius:99px; background:linear-gradient(90deg,#22d3ee,#a78bfa,#f472b6,#fde68a);
+    box-shadow:0 0 14px rgba(167,139,250,.8); }
+  .splash-progress span::after{ content:""; position:absolute; right:-5px; top:50%; width:12px; height:12px; margin-top:-6px; border-radius:50%; background:#fff; box-shadow:0 0 12px 4px #f0abfc; }
+  .sp-status{ position:relative; z-index:2; margin-top:10px; display:flex; gap:10px; align-items:center; font-size:12.5px; color:#c7d2fe; animation:rise .6s 2.05s both; }
+  .sp-status b{ color:#fff; font-variant-numeric:tabular-nums; min-width:3.2em; text-align:right; }
+  .splash-hint{ position:relative; z-index:2; margin-top:8px; font-size:12px; opacity:.55; animation:rise .8s 2.3s both; }
 
   /* ================= Main shell ================= */
   /* แอปสูงเท่าหน้าจอพอดี (100dvh รองรับแถบเบราว์เซอร์มือถือ) เพื่อให้การ์ดทุกใบอยู่ในหน้าเดียว */
   #app{ position:relative; z-index:1; height:100vh; height:100dvh; display:flex; flex-direction:column;
-    opacity:0; transform:translateY(12px); transition:opacity .6s ease, transform .6s ease; }
-  #app.show{ opacity:1; transform:none; }
+    opacity:0; clip-path:circle(0% at 50% 42%); transition:opacity .5s ease, clip-path 1.1s cubic-bezier(.7,0,.2,1); }
+  #app.show{ opacity:1; clip-path:circle(150% at 50% 42%); }
+  #app.revealed{ clip-path:none; }   /* ถอด clip-path หลังเปิดเสร็จ เพื่อไม่ให้มีผลต่อประสิทธิภาพ */
+  /* หยุดอนิเมชันการ์ดไว้ระหว่าง splash แล้วเล่นทีละใบเมื่อเข้าแอป (ไม่งั้นจะเล่นจบไปก่อนผู้ใช้เห็น) */
+  #app:not(.show) .app-card{ animation-play-state:paused; }
   /* v3: บีบเนื้อหาให้อยู่ในกรอบกลางจอ (กว้างสูงสุด 1540px) และเว้นขอบล่าง — Header ยังเต็มความกว้างเหมือนเดิม */
   main.fit{ flex:1; min-height:0; width:100%; max-width:1540px; margin:0 auto; display:flex; flex-direction:column;
     gap:clamp(8px,1.4vh,14px);
@@ -135,9 +188,11 @@
   @media (max-width:639px){ .grid-wrap{ --rowmax:140px; } }
   /* จำนวนคอลัมน์กำหนดด้วย --cols; จำนวนแถว (--rows) คำนวณจาก JS จากจำนวนแอปทั้งหมด
      ใช้จำนวนแอปทั้งหมด (ไม่ใช่ที่กรองแล้ว) เพื่อให้ขนาดการ์ดคงที่เวลาค้นหา/กรอง */
-  #grid{ --cols:3; height:100%; display:grid; gap:var(--gap);
-    grid-template-columns:repeat(var(--cols),minmax(0,1fr));
+  /* --cols = จำนวนคอลัมน์ "สูงสุด" ตามขนาดจอ; JS เลือกจำนวนจริง (--ncol) ให้เหมาะกับจำนวนแอป */
+  #grid{ --cols:4; height:100%; display:grid; gap:var(--gap);
+    grid-template-columns:repeat(var(--ncol,var(--cols)),minmax(0,1fr));
     grid-template-rows:repeat(var(--rows,2),minmax(0,1fr)); }
+  @media (max-width:1279px){ #grid{ --cols:3; } }
   @media (max-width:1023px){ #grid{ --cols:2; } }
   #empty{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
   #empty.hidden{ display:none; }
@@ -165,6 +220,10 @@
   .stat-chip .val{ font-size:clamp(17px,1.7vw,24px); font-weight:800; line-height:1.2; }
   .stat-chip .unit{ font-size:clamp(9px,.7vw,11px); opacity:.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   @media (max-width:639px){ .stat-chip .unit{ display:none; } }
+  .stat-chip::before{ content:""; position:absolute; top:0; bottom:0; left:-60%; width:40%; transform:skewX(-20deg);
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent); animation:chipShine 5s ease-in-out infinite; }
+  .stat-chip:nth-child(2)::before{ animation-delay:.4s; } .stat-chip:nth-child(3)::before{ animation-delay:.8s; } .stat-chip:nth-child(4)::before{ animation-delay:1.2s; }
+  @keyframes chipShine{ 0%,70%{ left:-60%; } 100%{ left:140%; } }
   .stat-chip::after{ content:""; position:absolute; right:-20px; top:-20px; width:90px; height:90px; border-radius:50%; background:rgba(255,255,255,.15); }
 
   /* การ์ดแอป */
@@ -173,12 +232,43 @@
   .app-card{ position:relative; border-radius:clamp(16px,1.6vw,24px); padding:clamp(12px,1.4vw,22px); cursor:pointer; overflow:hidden; isolation:isolate;
     container-type:size; min-height:0; display:flex; flex-direction:column;
     transition:transform .35s cubic-bezier(.2,.9,.3,1.2), box-shadow .35s; animation:cardIn .6s both; outline:none; }
-  /* v3: พื้นการ์ดทึบขึ้น เพื่อให้ตัดกับพื้นหลังอนิเมชันชัดเจน (อ่านง่ายทั้งโหมดมืด/สว่าง) */
-  :root{ --card-bg:rgba(255,255,255,.93); --card-border:rgba(99,102,241,.22); }
-  :root[data-theme="dark"]{ --card-bg:rgba(10,10,30,.90); --card-border:rgba(167,139,250,.26); }
-  .app-card.glass{ background:var(--card-bg); border-color:var(--card-border);
-    box-shadow:0 14px 34px -16px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06); }
-  .app-card{ padding:clamp(12px,1.1vw,18px) !important; }
+  /* v4: พื้นการ์ดทึบ + ย้อมสีประจำแอปอ่อน ๆ + สปอตไลต์ตามเมาส์ (ใช้ตัวแปร --c1rgb/--c2rgb/--c3rgb ที่ JS ใส่ให้แต่ละใบ) */
+  :root{ --card-bg:rgba(255,255,255,.94); --tint:.10; --wm:.09; }
+  :root[data-theme="dark"]{ --card-bg:rgba(10,10,30,.90); --tint:.24; --wm:.13; }
+  .app-card{ --rx:0deg; --ry:0deg; --ty:0px; --mx:50%; --my:0%; --spot:0;
+    transform:perspective(1000px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(var(--ty));
+    transition:transform .25s ease-out, box-shadow .35s, scale .15s;
+    animation:cardIn .8s cubic-bezier(.2,.9,.3,1.1) backwards;   /* backwards: ไม่ค้างค่า transform หลังจบ → การเอียง 3D ยังทำงาน */
+    padding:clamp(12px,1.1vw,18px) !important; }
+  .app-card.glass{ border:0;
+    background:
+      radial-gradient(360px circle at var(--mx) var(--my), rgba(var(--c2rgb),var(--spot)), transparent 60%),
+      linear-gradient(150deg, rgba(var(--c1rgb),var(--tint)) 0%, rgba(var(--c3rgb),calc(var(--tint) * .45)) 55%, transparent 100%),
+      var(--card-bg);
+    box-shadow:0 14px 34px -16px rgba(0,0,0,.55), 0 0 0 1px rgba(var(--c1rgb),.12); }
+  /* ขอบไล่สีหมุนรอบการ์ด */
+  .app-card::before{ content:""; position:absolute; inset:0; border-radius:inherit; padding:1.6px; z-index:1; pointer-events:none;
+    background:conic-gradient(from var(--ang),var(--c1),var(--c2),var(--c3),var(--c1));
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude;
+    opacity:.5; animation:angSpin 6s linear infinite; transition:opacity .3s; }
+  /* แสงกวาดผ่านการ์ดตอนชี้ */
+  .app-card::after{ content:""; position:absolute; top:0; bottom:0; left:-70%; width:45%; transform:skewX(-20deg); pointer-events:none; z-index:1;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent); transition:left .9s ease; }
+  .app-card:hover{ --ty:-6px; --spot:.26; box-shadow:0 24px 46px -18px rgba(var(--c1rgb),.7), 0 0 0 1px rgba(var(--c1rgb),.25); }
+  .app-card:hover::before{ opacity:1; animation-duration:2.4s; }
+  .app-card:hover::after{ left:140%; }
+  .card-head,.app-desc,.card-foot{ position:relative; z-index:2; }
+  .wm{ position:absolute; right:-16px; bottom:-20px; width:clamp(90px,8.5vw,130px); height:auto; aspect-ratio:1; color:var(--c2); opacity:var(--wm);
+    transform:rotate(-14deg); transition:transform .6s cubic-bezier(.2,1.3,.3,1), opacity .4s; pointer-events:none; z-index:0; }
+  .app-card:hover .wm{ transform:rotate(0) scale(1.12); opacity:calc(var(--wm) * 1.8); }
+  .app-en{ color:var(--c1); }
+  :root[data-theme="dark"] .app-en{ color:var(--c3); }
+  .new-badge{ display:inline-block; vertical-align:2px; margin-left:4px; font-size:10.5px; font-weight:700; line-height:1.5; padding:1px 8px; border-radius:99px; color:#fff;
+    background:linear-gradient(90deg,#f43f5e,#f59e0b); animation:badgePulse 1.8s infinite; }
+  @keyframes badgePulse{ 0%{ box-shadow:0 0 0 0 rgba(244,63,94,.6); } 70%,100%{ box-shadow:0 0 0 8px rgba(244,63,94,0); } }
+  .ripple{ position:absolute; border-radius:50%; transform:scale(0); pointer-events:none; z-index:1;
+    background:radial-gradient(circle,rgba(var(--c2rgb),.45),transparent 70%); animation:rippleOut .6s ease-out forwards; }
+  @keyframes rippleOut{ to{ transform:scale(1); opacity:0; } }
   .card-head{ display:flex; align-items:center; gap:clamp(10px,1vw,14px); padding-right:38px; min-width:0; }
   .app-title{ margin:0; font-weight:700; font-size:clamp(14px,1vw,17px); line-height:1.4;
     display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
@@ -189,7 +279,7 @@
   .open-count{ font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .lbl-short{ display:none; }
   @container (max-height:220px){ .app-desc{ -webkit-line-clamp:2; } }
-  @container (max-height:175px){ .app-desc{ display:none; } }
+  @container (max-height:160px){ .app-desc{ display:none; } }
   @container (max-height:135px) or (max-width:260px){
     .app-en,.open-count{ display:none; }
     .app-icon{ width:38px !important; height:38px !important; border-radius:12px !important; }
@@ -197,20 +287,27 @@
     .card-foot{ justify-content:flex-end; padding-top:4px; }
     .open-pill{ padding:5px 12px !important; font-size:12px !important; }
   }
-  @container (max-width:260px){ .lbl-long{ display:none; } .lbl-short{ display:inline; } .app-title{ font-size:13.5px; } .card-head{ gap:8px; padding-right:30px; } }
-  .app-card:hover,.app-card:focus-visible{ transform:translateY(-6px) scale(1.015); }
-  .app-card:focus-visible{ box-shadow:0 0 0 3px #818cf8, var(--shadow); }
-  .app-card:active{ transform:scale(.98); }
-  .app-card .halo{ position:absolute; inset:-1px; z-index:-1; opacity:0; transition:opacity .35s; border-radius:24px; }
-  .app-card:hover .halo{ opacity:.14; }
-  .app-icon{ width:clamp(40px,2.9vw,50px); height:clamp(40px,2.9vw,50px); flex:none; border-radius:clamp(12px,1vw,15px); display:grid; place-items:center; color:#fff; box-shadow:0 10px 20px -8px rgba(0,0,0,.35); transition:transform .4s; }
-  .app-card:hover .app-icon{ transform:rotate(-8deg) scale(1.08); }
-  .open-pill{ display:inline-flex; align-items:center; gap:6px; padding:6px 13px; border-radius:99px; font-size:12.5px; font-weight:600; color:#fff; transition:gap .25s; white-space:nowrap; flex:none; }
-  .app-card:hover .open-pill{ gap:10px; }
+  /* การ์ดแคบ (มือถือ): ให้ชื่อแอปขึ้นได้ 3 บรรทัด จะได้ไม่ถูกตัดเป็น … */
+  @container (max-width:260px){ .lbl-long{ display:none; } .lbl-short{ display:inline; } .app-title{ font-size:13px; line-height:1.45; -webkit-line-clamp:3; } .card-head{ gap:8px; padding-right:30px; align-items:flex-start; } }
+  .app-card:focus-visible{ --ty:-6px; box-shadow:0 0 0 3px var(--c2), 0 24px 46px -18px rgba(var(--c1rgb),.7); }
+  .app-card:active{ scale:.98; }
+  /* ไอคอนแบบเงามัน + ลอยขึ้นลงเบา ๆ (ใช้ translate/rotate/scale แยก เพื่อไม่ชนกับ transform ตอน hover) */
+  .app-icon{ position:relative; overflow:hidden; width:clamp(40px,2.9vw,50px); height:clamp(40px,2.9vw,50px); flex:none; border-radius:clamp(12px,1vw,15px);
+    display:grid; place-items:center; color:#fff; background:linear-gradient(135deg,var(--c1),var(--c2) 55%,var(--c3));
+    box-shadow:0 10px 22px -8px rgba(var(--c1rgb),.75); animation:iconFloat 4s ease-in-out infinite; animation-delay:var(--fd,0s);
+    transition:rotate .4s cubic-bezier(.2,1.4,.4,1), scale .4s cubic-bezier(.2,1.4,.4,1); }
+  .app-icon::after{ content:""; position:absolute; inset:0; background:linear-gradient(160deg,rgba(255,255,255,.5),transparent 48%); }
+  .app-icon svg{ position:relative; z-index:1; }
+  @keyframes iconFloat{ 50%{ translate:0 -4px; } }
+  .app-card:hover .app-icon{ rotate:-10deg; scale:1.12; }
+  .open-pill{ display:inline-flex; align-items:center; gap:6px; padding:6px 13px; border-radius:99px; font-size:12.5px; font-weight:600; color:#fff;
+    background:linear-gradient(90deg,var(--c1),var(--c2),var(--c3),var(--c1)); background-size:250% 100%;
+    box-shadow:0 8px 18px -8px rgba(var(--c1rgb),.8); transition:gap .25s, background-position .6s; white-space:nowrap; flex:none; }
+  .app-card:hover .open-pill{ gap:10px; background-position:100% 0; }
   .fav-btn{ position:absolute; top:10px; right:10px; width:32px; height:32px; border-radius:11px; display:grid; place-items:center; z-index:2; transition:transform .2s; }
   .fav-btn:hover{ transform:scale(1.12); }
   .fav-btn.on svg{ fill:#f59e0b; stroke:#f59e0b; }
-  @keyframes cardIn{ from{ opacity:0; transform:translateY(24px) scale(.97); } to{ opacity:1; transform:none; } }
+  @keyframes cardIn{ from{ opacity:0; transform:perspective(1000px) rotateX(-30deg) translateY(50px) scale(.9); filter:blur(6px); } }
 
   .chip{ padding:7px 14px; border-radius:99px; font-size:13px; font-weight:500; border:1px solid var(--border); transition:all .25s; white-space:nowrap; }
   @media (max-width:639px){ .chip{ padding:6px 11px; font-size:12px; } }
@@ -246,8 +343,10 @@
 
   /* ลดการเคลื่อนไหวตามการตั้งค่าเครื่อง (เพื่อผู้ใช้ที่เวียนหัว / ประหยัดแบตเตอรี่) */
   @media (prefers-reduced-motion: reduce){
-    .blob,.splash-aurora,.splash-ring,.splash-title{ animation:none !important; }
+    .blob,.sp-aurora,.sp-floor,.sp-beams,.orbit,.orbit-wrap,.sp-shock,.sp-flash,.sp-halo,.splash-logo,.splash-title,.app-icon,.app-card::before,.stat-chip::before{ animation:none !important; }
+    .splash-title{ clip-path:none; }
     .app-card{ animation:none; }
+    #app{ clip-path:none; transition:opacity .3s; }
   }
   :root[data-motion="off"] .blob, :root[data-motion="off"] .grid-overlay{ animation:none !important; }
 </style>
@@ -263,11 +362,19 @@
 
   <!-- ================= Splash (หน้าโลโก้) ================= -->
   <section id="splash" role="button" aria-label="แตะเพื่อเข้าสู่แอป" tabindex="0">
-    <div class="splash-aurora"></div>
-    <div class="splash-ring"></div>
-    <div class="splash-ring" style="animation-delay:1.06s"></div>
-    <div class="splash-ring" style="animation-delay:2.13s"></div>
-    <img class="splash-logo" id="splashLogo" alt="โลโก้ SBK Dashboard Hub">
+    <canvas id="warp" aria-hidden="true"></canvas>
+    <div class="sp-aurora" aria-hidden="true"></div>
+    <div class="sp-floor" aria-hidden="true"></div>
+    <div class="sp-stage" aria-hidden="false">
+      <div class="sp-beams"></div>
+      <div class="sp-halo"></div>
+      <div class="orbit-wrap ow1"><div class="orbit o1"></div></div>
+      <div class="orbit-wrap ow2"><div class="orbit o2"></div></div>
+      <div class="orbit-wrap ow3"><div class="orbit o3"></div></div>
+      <div class="sp-shock"></div><div class="sp-shock s2"></div><div class="sp-shock s3"></div>
+      <img class="splash-logo" id="splashLogo" alt="โลโก้ SBK Dashboard Hub">
+    </div>
+    <div class="sp-flash" aria-hidden="true"></div>
     <div class="splash-title">SBK Dashboard Hub</div>
     <div class="splash-sub">ศูนย์รวมแดชบอร์ดวิเคราะห์ลูกค้าและยานพาหนะ · ซีคอนบางแค</div>
     <div class="splash-date">
@@ -275,7 +382,8 @@
       <div class="t" id="splashTime">--:--:--</div>
     </div>
     <div class="splash-progress"><span id="splashBar"></span></div>
-    <div class="splash-hint">แตะหน้าจอเพื่อเข้าสู่แอปทันที</div>
+    <div class="sp-status"><span id="splashStatus">กำลังเตรียมระบบ…</span><b id="splashPct">0%</b></div>
+    <div class="splash-hint">แตะหน้าจอเพื่อข้าม</div>
   </section>
 
   <!-- ================= แอปหลัก ================= -->
@@ -424,30 +532,31 @@
    1) ข้อมูลแอป (แก้ไข/เพิ่มลิงก์ได้ที่นี่ที่เดียว)
    ===================================================================== */
 const APPS = [
+  /* grad = 3 สีต่อแอป [เข้ม, กลาง, สว่าง] ใช้กับไอคอน ขอบหมุน ปุ่ม และการย้อมพื้นการ์ด — แต่ละแอปคนละตระกูลสีเพื่อแยกง่าย */
   { id:'total-summary', name:'Total Customer & Vehicle Service Summary', th:'สรุปยอดลูกค้าและยานพาหนะรวม',
     desc:'ภาพรวมยอดลูกค้าเข้า-ออก และยอดยานพาหนะที่ใช้บริการทั้งหมด',
     url:'https://center124-glitch.github.io/Total-Customer-Vehicle-Service-Summary/',
-    grad:['#6366f1','#8b5cf6'], icon:'summary', tags:'สรุป รวม total summary service' },
+    grad:['#4f46e5','#7c3aed','#a78bfa'], icon:'summary', tags:'สรุป รวม total summary service' },
   { id:'compare', name:'Customer & Car Compare Analytics', th:'เปรียบเทียบยอดลูกค้า-รถยนต์',
     desc:'เปรียบเทียบยอดลูกค้าและรถยนต์ระหว่างช่วงเวลา พร้อมอัตราการเปลี่ยนแปลง',
     url:'https://center124-glitch.github.io/Customer-Car-Compare-Analytics/',
-    grad:['#06b6d4','#3b82f6'], icon:'compare', tags:'เปรียบเทียบ compare car customer' },
+    grad:['#0369a1','#0ea5e9','#67e8f9'], icon:'compare', tags:'เปรียบเทียบ compare car customer' },
   { id:'suite', name:'SBK Analytics Suite', th:'ชุดวิเคราะห์ข้อมูล SBK',
     desc:'ชุดเครื่องมือวิเคราะห์ข้อมูลเชิงลึก หน้าภาพรวม (Overview)',
     url:'https://center124-glitch.github.io/SBK-Analytics-Suite/#overview',
-    grad:['#ec4899','#f43f5e'], icon:'suite', tags:'analytics suite overview ภาพรวม' },
+    grad:['#e11d48','#f43f5e','#f9a8d4'], icon:'suite', tags:'analytics suite overview ภาพรวม' },
   { id:'density', name:'Dashboard Comparing Density', th:'เปรียบเทียบความหนาแน่น',
     desc:'เปรียบเทียบความหนาแน่นของลูกค้าและยานพาหนะรายชั่วโมง',
     url:'https://center124-glitch.github.io/Dashboard-Comparing-Density_2/',
-    grad:['#f59e0b','#f97316'], icon:'density', tags:'ความหนาแน่น density รายชั่วโมง' },
+    grad:['#ea580c','#f97316','#fbbf24'], icon:'density', tags:'ความหนาแน่น density รายชั่วโมง' },
   { id:'gate', name:'SBK Gate Analytics', th:'วิเคราะห์ยอดรายประตู',
     desc:'วิเคราะห์ยอดลูกค้า/ยานพาหนะเข้า-ออก แยกตามประตูทางเข้า',
     url:'https://center124-glitch.github.io/SBK_Gate_Analytics/',
-    grad:['#10b981','#14b8a6'], icon:'gate', tags:'ประตู gate ทางเข้า' },
+    grad:['#047857','#10b981','#a3e635'], icon:'gate', tags:'ประตู gate ทางเข้า' },
   { id:'traffic', name:'Traffic Monitoring System', th:'ระบบติดตามการจราจร',
     desc:'ติดตามสถานการณ์การจราจรและปริมาณรถเข้า-ออกศูนย์การค้า',
     url:'https://center124-glitch.github.io/Traffic_Monitoring_System/',
-    grad:['#a855f7','#d946ef'], icon:'traffic', tags:'จราจร traffic monitoring' },
+    grad:['#a21caf','#d946ef','#f0abfc'], icon:'traffic', tags:'จราจร traffic monitoring' },
 ];
 
 /* ไอคอน SVG ของแต่ละแอป (stroke = currentColor เพื่อให้สีขาวบนพื้น gradient) */
@@ -457,6 +566,7 @@ const ICONS = {
   suite:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
   density:'<path d="M3 12h3l3-8 4 16 3-8h5"/>',
   gate:'<path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-7h6v7"/>',
+  shield:'<path d="M12 2l8 3v6c0 5-3.4 9.3-8 11-4.6-1.7-8-6-8-11V5z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
   traffic:'<rect x="7" y="2" width="10" height="20" rx="3"/><circle cx="12" cy="7" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="17" r="1.6"/>',
 };
 const svgIcon = (key, size=26) =>
@@ -719,6 +829,18 @@ function closeInstallModal(){ document.getElementById('installModal').classList.
    ===================================================================== */
 function escapeHTML(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+/* แปลง #rrggbb → "r,g,b" เพื่อใช้ใน rgba(var(--c1rgb), alpha) — ทำให้ปรับความเข้มสีได้จาก CSS ที่เดียว */
+function hexRgb(h){
+  const m = /^#?([0-9a-f]{6})$/i.exec(String(h).trim());
+  if (!m) return '99,102,241';
+  const n = parseInt(m[1], 16);
+  return `${(n>>16)&255},${(n>>8)&255},${n&255}`;
+}
+function cardVars(a){
+  const [c1,c2,c3] = [a.grad[0], a.grad[1], a.grad[2] || a.grad[1]];
+  return `--c1:${c1};--c2:${c2};--c3:${c3};--c1rgb:${hexRgb(c1)};--c2rgb:${hexRgb(c2)};--c3rgb:${hexRgb(c3)};`;
+}
+
 function getVisibleApps(){
   const q = state.query.trim().toLowerCase();
   let list = APPS.filter(a => !q || `${a.name} ${a.th} ${a.desc} ${a.tags}`.toLowerCase().includes(q));
@@ -733,24 +855,23 @@ function render(){
   grid.innerHTML = list.map((a, i) => {
     const fav = state.favs.includes(a.id);
     const n = state.opens[a.id] || 0;
-    const g = `linear-gradient(135deg,${a.grad[0]},${a.grad[1]})`;
     return `
-    <article class="app-card glass" tabindex="0" data-id="${a.id}" style="animation-delay:${i*70}ms" aria-label="เปิด ${escapeHTML(a.th)}">
-      <div class="halo" style="background:${g}"></div>
+    <article class="app-card glass" tabindex="0" data-id="${a.id}" style="${cardVars(a)}--fd:${(i*0.45).toFixed(2)}s;animation-delay:${300 + i*90}ms" aria-label="เปิด ${escapeHTML(a.th)}">
+      <svg class="wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[a.icon]||ICONS.suite}</svg>
       <button class="fav-btn glass ${fav?'on':''}" data-fav="${a.id}" title="${fav?'นำออกจากรายการโปรด':'เพิ่มในรายการโปรด'}" aria-label="รายการโปรด" aria-pressed="${fav}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>
       </button>
       <div class="card-head">
-        <div class="app-icon" style="background:${g}">${svgIcon(a.icon)}</div>
+        <div class="app-icon">${svgIcon(a.icon)}</div>
         <div class="min-w-0">
-          <h3 class="app-title">${escapeHTML(a.th)}</h3>
-          <div class="app-en" style="color:${a.grad[0]}">${escapeHTML(a.name)}</div>
+          <h3 class="app-title">${escapeHTML(a.th)}${a.badge ? `<span class="new-badge">${escapeHTML(a.badge)}</span>` : ''}</h3>
+          <div class="app-en">${escapeHTML(a.name)}</div>
         </div>
       </div>
       <p class="app-desc">${escapeHTML(a.desc)}</p>
       <div class="card-foot">
         <span class="open-count">${n ? `เปิดแล้ว ${n.toLocaleString('th-TH')} ครั้ง` : 'ยังไม่เคยเปิด'}</span>
-        <span class="open-pill" style="background:${g}"><span class="lbl-long">เปิดแดชบอร์ด</span><span class="lbl-short">เปิด</span>
+        <span class="open-pill"><span class="lbl-long">เปิดแดชบอร์ด</span><span class="lbl-short">เปิด</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </span>
       </div>
@@ -776,10 +897,19 @@ function render(){
 function layoutGrid(){
   const grid = document.getElementById('grid');
   if (!grid) return;
-  const cols = parseInt(getComputedStyle(grid).getPropertyValue('--cols'), 10) || 3;
-  const rows = Math.max(1, Math.ceil(APPS.length / cols));
+  const n = APPS.length;
+  const maxCols = parseInt(getComputedStyle(grid).getPropertyValue('--cols'), 10) || 3;
+  // จอใหญ่: ใช้ 2 แถวเสมอถ้าทำได้ (7 แอป → 4 คอลัมน์) เพื่อให้การ์ดไม่เตี้ยเกินไป
+  const cols = maxCols >= 4 ? Math.min(4, Math.max(2, Math.ceil(n / 2))) : maxCols;
+  const rows = Math.max(1, Math.ceil(n / cols));
+  grid.style.setProperty('--ncol', String(cols));
   // ตั้งที่ .grid-wrap เพื่อให้ทั้งความสูงกรอบและ #grid (สืบทอด custom property) ใช้ค่าเดียวกัน
   grid.parentElement.style.setProperty('--rows', String(rows));
+  // แถวสุดท้ายไม่เต็ม → ขยายการ์ดใบสุดท้ายให้เต็มแถว (เฉพาะตอนแสดงครบทุกแอป ไม่ให้การ์ดกว้างผิดสัดส่วนตอนกรอง)
+  const cards = grid.querySelectorAll('.app-card');
+  cards.forEach(c => { c.style.gridColumn = ''; });
+  const rem = n % cols;
+  if (cards.length === n && rem !== 0) cards[cards.length - 1].style.gridColumn = `span ${cols - rem + 1}`;
 }
 
 function renderStats(){
@@ -878,26 +1008,125 @@ function openExternal(){
 /* =====================================================================
    11) Splash — แสดงโลโก้ + วันเวลา แล้วเข้าแอปอัตโนมัติ
    ===================================================================== */
-const SPLASH_MS = 3000;   // อยู่ในช่วง 2–4 วินาทีตามที่กำหนด
+const SPLASH_MS = 3800;   // ไม่เกิน 4 วินาทีตามที่กำหนด (แตะเพื่อข้ามได้)
 let splashDone = false;
+const SPLASH_STEPS = [
+  [0,    () => 'กำลังเตรียมระบบ…'],
+  [0.35, () => `กำลังเชื่อมต่อ ${APPS.length} แดชบอร์ด…`],
+  [0.75, () => 'ตรวจสอบความพร้อม…'],
+  [0.97, () => 'พร้อมใช้งาน ✓'],
+];
 function runSplash(){
   const bar = document.getElementById('splashBar');
+  const pct = document.getElementById('splashPct');
+  const st  = document.getElementById('splashStatus');
   const t0 = performance.now();
+  warpStart();
   (function step(now){
     if (splashDone) return;
     const p = Math.min(1, (now - t0) / SPLASH_MS);
-    bar.style.width = (p * 100).toFixed(1) + '%';
+    // ease-out ให้แถบวิ่งเร็วช่วงแรกแล้วค่อย ๆ เต็ม ดูเป็นธรรมชาติ
+    const e = 1 - Math.pow(1 - p, 1.35);
+    bar.style.width = (e * 100).toFixed(1) + '%';
+    pct.textContent = Math.round(e * 100) + '%';
+    for (let i = SPLASH_STEPS.length - 1; i >= 0; i--){
+      if (p >= SPLASH_STEPS[i][0]){ const t = SPLASH_STEPS[i][1](); if (st.textContent !== t) st.textContent = t; break; }
+    }
     if (p < 1) requestAnimationFrame(step); else enterApp();
   })(t0);
 }
+
+/* ===== Warp-speed starfield บน canvas (เฉพาะหน้า splash) =====
+   ความเร็ว: เร่งขึ้นจนถึง 1.1s (ช่วงโลโก้ลงจอด) แล้วชะลอลง + ระเบิดอนุภาคตอนโลโก้ลงจอด */
+const WARP = { raf:0 };
+function warpStart(){
+  const c = document.getElementById('warp');
+  const x = c && c.getContext && c.getContext('2d');
+  if (!x) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let w = window.innerWidth, h = window.innerHeight;
+  c.width = w * dpr; c.height = h * dpr; x.setTransform(dpr,0,0,dpr,0,0);
+  const COLORS = ['#c7d2fe','#67e8f9','#f9a8d4','#fde68a','#ffffff','#a78bfa'];
+  const maxD = Math.hypot(w, h) / 2;
+  const mk = init => ({ a:Math.random()*Math.PI*2, d:init ? Math.random()*maxD : Math.random()*30, s:Math.random()*.8+.2, c:COLORS[Math.random()*COLORS.length|0] });
+  const stars = Array.from({ length: w < 640 ? 200 : 420 }, () => mk(true));
+  const sparks = [];
+  let burst = false;
+  // จุดศูนย์กลางวาร์ป = กึ่งกลางโลโก้จริง (ตำแหน่งต่างกันตามความสูงจอ) แล้วใช้กับแสงวาบด้วย
+  const stage = document.querySelector('.sp-stage');
+  const sr = stage ? stage.getBoundingClientRect() : { left:w/2, top:h*.4, width:0, height:0 };
+  const CX = sr.left + sr.width/2, CY = sr.top + sr.height/2;
+  const fl = document.querySelector('.sp-flash');
+  if (fl) fl.style.background = `radial-gradient(circle at ${CX}px ${CY}px,#fff 0%,rgba(199,210,254,.6) 18%,rgba(255,255,255,0) 60%)`;
+  const t0 = performance.now();
+  if (reducedMotion){   // วาดภาพนิ่งครั้งเดียว
+    stars.forEach(s => { x.fillStyle = s.c; x.fillRect(CX + Math.cos(s.a)*s.d, CY + Math.sin(s.a)*s.d, 1.5, 1.5); });
+    return;
+  }
+  (function loop(now){
+    if (splashDone) return;
+    const t = (now - t0) / 1000;
+    const cx = CX, cy = CY;
+    const speed = t < 1.1 ? 1.5 + (t/1.1) * 34 : Math.max(2.2, 35.5 - (t - 1.1) * 28);
+    x.clearRect(0, 0, w, h);
+    x.lineCap = 'round';
+    for (let i = 0; i < stars.length; i++){
+      const s = stars[i];
+      const v = speed * s.s * (1 + s.d / 260);
+      const d0 = s.d; s.d += v;
+      const cos = Math.cos(s.a), sin = Math.sin(s.a);
+      const x1 = cx + cos*s.d, y1 = cy + sin*s.d;
+      if (x1 < -20 || x1 > w + 20 || y1 < -20 || y1 > h + 20){ stars[i] = mk(false); continue; }
+      const tail = Math.min(v * 2.2, 140);
+      x.strokeStyle = s.c;
+      x.globalAlpha = Math.min(1, .25 + s.d / maxD);
+      x.lineWidth = s.s * (1 + s.d / 350);
+      x.beginPath(); x.moveTo(cx + cos*Math.max(d0, s.d - tail), cy + sin*Math.max(d0, s.d - tail)); x.lineTo(x1, y1); x.stroke();
+    }
+    // ระเบิดอนุภาคตอนโลโก้ลงจอด
+    if (!burst && t >= 1.2){
+      burst = true;
+      for (let i = 0; i < (w < 640 ? 90 : 160); i++){
+        const a = Math.random()*Math.PI*2, sp = Math.random()*9 + 2;
+        sparks.push({ x:cx, y:cy, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:1, c:COLORS[Math.random()*COLORS.length|0], r:Math.random()*2.2+.8 });
+      }
+    }
+    for (let i = sparks.length - 1; i >= 0; i--){
+      const p = sparks[i];
+      p.x += p.vx; p.y += p.vy; p.vx *= .965; p.vy = p.vy * .965 + .05; p.life -= .012;
+      if (p.life <= 0){ sparks.splice(i, 1); continue; }
+      x.globalAlpha = p.life; x.fillStyle = p.c;
+      x.beginPath(); x.arc(p.x, p.y, p.r, 0, Math.PI*2); x.fill();
+    }
+    x.globalAlpha = 1;
+    WARP.raf = requestAnimationFrame(loop);
+  })(t0);
+}
+
+/* นับตัวเลขขึ้นตอนเข้าแอป ให้การ์ดสรุปมีชีวิตชีวา */
+function countUp(id){
+  const el = document.getElementById(id); if (!el) return;
+  const target = parseInt(String(el.textContent).replace(/[^0-9]/g, ''), 10) || 0;
+  if (!target || reducedMotion) return;
+  const t0 = performance.now(), dur = 900;
+  (function f(now){
+    const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(target * e).toLocaleString('th-TH');
+    if (p < 1) requestAnimationFrame(f);
+  })(t0);
+}
+
 function enterApp(){
   if (splashDone) return;
   splashDone = true;
+  cancelAnimationFrame(WARP.raf);
   const sp = document.getElementById('splash');
   sp.classList.add('leave');
   const app = document.getElementById('app');
   app.classList.add('show'); app.setAttribute('aria-hidden','false');
-  setTimeout(() => sp.remove(), 750);
+  setTimeout(() => app.classList.add('revealed'), 1200);
+  setTimeout(() => sp.remove(), 900);
+  ['statTotal','statFav','statOpen'].forEach(countUp);
   applyMotion();
   // เปิดแอปตรงจากลิงก์ #app=<id> (เช่น บุ๊กมาร์กแดชบอร์ดที่ใช้บ่อย)
   const m = location.hash.match(/^#app=([\w-]+)/);
@@ -911,6 +1140,38 @@ function enterApp(){
    12) Event handlers
    ===================================================================== */
 function debounce(fn, ms){ let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+/* ระลอกคลื่นจากจุดที่แตะ */
+function spawnRipple(card, e){
+  if (reducedMotion) return;
+  const r = card.getBoundingClientRect();
+  const size = Math.max(r.width, r.height) * 2.2;
+  const x = (e.clientX || r.left + r.width/2) - r.left - size/2;
+  const y = (e.clientY || r.top + r.height/2) - r.top - size/2;
+  const rp = document.createElement('span');
+  rp.className = 'ripple';
+  rp.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px`;
+  card.appendChild(rp);
+  setTimeout(() => rp.remove(), 650);
+}
+/* เอียงการ์ด 3D + สปอตไลต์ตามเมาส์ — เปิดเฉพาะอุปกรณ์ที่มีเมาส์ (มือถือไม่มี hover จะดูกระตุก) */
+function initTilt(grid){
+  if (reducedMotion || !window.matchMedia || !matchMedia('(hover:hover) and (pointer:fine)').matches) return;
+  grid.addEventListener('pointermove', e => {
+    const card = e.target.closest('.app-card'); if (!card) return;
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+    card.style.setProperty('--mx', (px*100).toFixed(1) + '%');
+    card.style.setProperty('--my', (py*100).toFixed(1) + '%');
+    card.style.setProperty('--ry', ((px - .5) * 9).toFixed(2) + 'deg');
+    card.style.setProperty('--rx', ((.5 - py) * 7).toFixed(2) + 'deg');
+  });
+  grid.addEventListener('pointerout', e => {
+    const card = e.target.closest('.app-card');
+    if (!card || card.contains(e.relatedTarget)) return;
+    ['--rx','--ry'].forEach(p => card.style.setProperty(p, '0deg'));
+  });
+}
 
 function handleEvents(){
   const sp = document.getElementById('splash');
@@ -947,8 +1208,12 @@ function handleEvents(){
       saveState(); render(); return;
     }
     const card = e.target.closest('.app-card');
-    if (card) openApp(card.dataset.id);
+    if (!card) return;
+    spawnRipple(card, e);
+    // หน่วงเล็กน้อยให้เห็นคลื่นก่อนหน้าแดชบอร์ดเลื่อนขึ้นมา
+    setTimeout(() => openApp(card.dataset.id), reducedMotion ? 0 : 200);
   });
+  initTilt(grid);
   grid.addEventListener('keydown', e => {
     if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('app-card')){ e.preventDefault(); openApp(e.target.dataset.id); }
   });
